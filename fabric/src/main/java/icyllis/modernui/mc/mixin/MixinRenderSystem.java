@@ -25,6 +25,8 @@ import icyllis.modernui.core.Core;
 import icyllis.modernui.mc.ModernUIClient;
 import icyllis.modernui.mc.ModernUIMod;
 import icyllis.modernui.mc.VulkanModIntegration;
+import icyllis.modernui.mc.Blaze3DVulkanIntegration;
+import com.mojang.blaze3d.vulkan.VulkanDevice;
 import icyllis.modernui.mc.fabric.UIManagerFabric;
 import net.minecraft.util.TimeSource;
 import org.lwjgl.opengl.GL;
@@ -55,6 +57,7 @@ public class MixinRenderSystem {
     private static void onInitRenderer(GpuDevice device, CallbackInfo ci) {
         Core.initialize();
         ContextOptions options = new ContextOptions();
+        options.mDepthClipNegativeOneToOne = false;
         String value = ModernUIClient.getBootstrapProperty(ModernUIClient.BOOTSTRAP_USE_STAGING_BUFFERS_IN_OPENGL);
         if (value != null) {
             options.mUseStagingBuffers = Boolean.parseBoolean(value);
@@ -64,14 +67,18 @@ public class MixinRenderSystem {
             options.mAllowGLSPIRV = Boolean.parseBoolean(value);
         }
         options.mDriverBugWorkarounds = ModernUIClient.getGpuDriverBugWorkarounds();
-        switch (device.getBackendName()) {
+        switch (device.getDeviceInfo().backendName()) {
             case "OpenGL" -> {
                 if (!Core.initOpenGL(options)) {
                     throw new IllegalStateException("Failed to create OpenGL device");
                 }
             }
             case "Vulkan" -> {
-                if (ModernUIMod.isVulkanModLoaded()) {
+                if (device.backend instanceof VulkanDevice nativeDevice) {
+                    if (!Core.initVulkan(Blaze3DVulkanIntegration.wrapContext(nativeDevice), options)) {
+                        throw new IllegalStateException("Failed to create native Blaze3D Vulkan context");
+                    }
+                } else if (ModernUIMod.isVulkanModLoaded()) {
                     var context = VulkanModIntegration.wrapContext();
                     if (!Core.initVulkan(context, options)) {
                         throw new IllegalStateException("Failed to create Vulkan device");
@@ -80,6 +87,8 @@ public class MixinRenderSystem {
                     throw new UnsupportedOperationException("Unknown Vulkan backend");
                 }
             }
+            default -> throw new UnsupportedOperationException("Unsupported rendering backend: " +
+                    device.getDeviceInfo().backendName());
         }
         UIManagerFabric.initialize();
         UIManagerFabric.initializeRenderer();

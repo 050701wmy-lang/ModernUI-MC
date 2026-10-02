@@ -19,6 +19,7 @@ repositories {
 dependencies {
     minecraft "com.mojang:minecraft:${minecraft_version}"
     compileOnly 'org.spongepowered:mixin:0.8.7'
+    compileOnly 'net.fabricmc:fabric-loader:0.19.3'
     compileOnly 'org.ow2.asm:asm-tree:9.8'
 
     implementation("dev.icyllis:modernui-core:${core_version}")
@@ -26,8 +27,8 @@ dependencies {
         transitive = false
     }
 
-    // VulkanMod_26.1.2-0.6.6.jar
-    api("maven.modrinth:JYQhtZtO:PNODQNIn")
+    // Keep VulkanMod API available for optional integration until a 26.2 build is published.
+    compileOnly("maven.modrinth:JYQhtZtO:PNODQNIn")
     compileOnly("org.lwjgl:lwjgl-vulkan:3.4.1")
 }
 
