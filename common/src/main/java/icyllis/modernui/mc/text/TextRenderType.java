@@ -63,6 +63,7 @@ public abstract class TextRenderType {
     public static final RenderPipeline.Snippet PIPELINE_SNIPPET = RenderPipeline.builder()
             .withVertexShader(Identifier.withDefaultNamespace("core/text"))
             .withFragmentShader(ModernUIMod.location("core/rendertype_modern_text_normal"))
+            .withBindGroupLayout(BindGroupLayouts.GLOBALS)
             .withBindGroupLayout(BindGroupLayouts.FOG)
             .withBindGroupLayout(BindGroupLayouts.DYNAMIC_TRANSFORMS)
             .withBindGroupLayout(BindGroupLayouts.PROJECTION)
@@ -85,6 +86,7 @@ public abstract class TextRenderType {
 
     public static final RenderPipeline.Snippet PIPELINE_SDF_SNIPPET = RenderPipeline.builder()
             .withVertexShader(Identifier.withDefaultNamespace("core/text"))
+            .withBindGroupLayout(BindGroupLayouts.GLOBALS)
             .withBindGroupLayout(BindGroupLayouts.FOG)
             .withBindGroupLayout(BindGroupLayouts.DYNAMIC_TRANSFORMS)
             .withBindGroupLayout(BindGroupLayouts.PROJECTION)

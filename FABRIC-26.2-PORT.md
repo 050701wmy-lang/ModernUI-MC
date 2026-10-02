@@ -35,11 +35,15 @@ during verification); Gradle is 9.5.1.
 
 ## Verification
 
-`:ModernUI-Fabric:build` passed, including compilation, existing tests and
-access widener validation. `git diff --check` passed.
-An actual OpenGL/Vulkan client launch and visual verification have not been
-performed. The user will verify in the Wynncraft vulkan instance, including
-Sodium, ImmediatelyFast and Vitrail compatibility.
+`:ModernUI-Fabric:build` passed, including compilation, the test task and
+access widener validation. There are no dedicated GPU regression tests.
+`git diff --check` passed.
+The user's Wynncraft vulkan run on 2026-10-02 initialized the native Vulkan
+device and ModernUI renderer on an RTX 4060 Laptop GPU, with ImmediatelyFast
+and Vitrail present. It subsequently failed compiling the GUI text pipeline
+because a shader declared `Globals` without a corresponding pipeline layout.
+The normal/SDF text snippets and tooltip pipeline now declare `Globals`, as
+Minecraft's own pipelines do. In-game verification of this fix is pending.
 
 Check the main menu, ModernUI settings screen, transparent edges, tooltips,
 Chinese text, emoji, world text, resizing and resource reloads. Confirm the log

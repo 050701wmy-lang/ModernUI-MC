@@ -38,6 +38,7 @@ public abstract class GuiRenderType {
             .withLocation(ModernUIMod.location("pipeline/modern_tooltip"))
             .withVertexShader(ModernUIMod.location("core/rendertype_modern_tooltip"))
             .withFragmentShader(ModernUIMod.location("core/rendertype_modern_tooltip"))
+            .withBindGroupLayout(BindGroupLayouts.GLOBALS)
             .withBindGroupLayout(BindGroupLayouts.DYNAMIC_TRANSFORMS)
             .withBindGroupLayout(BindGroupLayouts.PROJECTION)
             .withBindGroupLayout(BindGroupLayout.builder()
