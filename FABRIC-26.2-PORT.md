@@ -61,17 +61,22 @@ output reproducing the resource-pack mismatch. This check and the full build
 passed. Visual verification of the font fix is pending; no game was launched
 by the agent.
 
-Wynncraft also uses its text shader to anchor ordinary ASCII labels to custom
-GUI cards. The default font exclusion rules redirected those glyphs to the
-ModernUI shader, leaving labels at their original title positions. Font reload
-now detects the active `core/text.vsh` importing the server's shared text vertex
-include with anchor and movement calls. While that pack is active, default-font
-bitmap and spacing providers take precedence, preserving glyph advances and
-the vanilla resource-pack shader path. Characters absent from the pack retain
-the ModernUI typeface fallback. Removing the pack restores the configured font
-policy on reload; the saved configuration is not modified. The detection was
-checked against the installed 26.2 server-pack shaders. Build and SPIR-V checks
-passed; in-game card label placement remains for the user to verify.
+Wynncraft's text shader anchors labels using marker pixels at fixed font-atlas
+coordinates, including `(6,8)` and `(0,0)`. Preserving bitmap font providers alone
+was insufficient: ModernUI repacks small glyphs into a shared atlas, moving the
+markers and separating them from the text they control. The user's next run
+confirmed pack detection worked but card labels remained displaced.
+
+For the active `core/text.vsh` importing the shared vertex include with anchor
+and movement calls, font reload now lets vanilla load and retain its original
+font sets, provider order and atlases. GUI text preparation, width measurement,
+trimming and line splitting use vanilla's paths while this pack is active.
+ModernUI loads its separate resources after vanilla completes, without joining
+the shared preparation barrier twice or replacing vanilla's font sets. This
+prioritizes the resource pack's fonts for Minecraft text while preserving the
+ModernUI UI renderer. Removing the pack restores the configured ModernUI text
+policy on reload; saved settings are not modified. Visual verification of this
+atlas-preserving fix is pending; no game was launched by the agent.
 
 Check the main menu, ModernUI settings screen, transparent edges, tooltips,
 Chinese text, emoji, world text, resizing and resource reloads. Confirm the log

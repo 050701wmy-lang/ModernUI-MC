@@ -305,7 +305,11 @@ public class TextLayoutEngine extends FontResourceManager
     private FontManager mVanillaFontManager;
 
     // Some server packs encode GUI anchors in the vanilla text shader and bitmap pixels.
-    private boolean mUseResourcePackTextLayout;
+    private volatile boolean mUseResourcePackTextLayout;
+
+    public boolean usesResourcePackTextLayout() {
+        return mUseResourcePackTextLayout;
+    }
 
     private final ModernTextRenderer mTextRenderer;
     private final ModernStringSplitter mStringSplitter;
@@ -497,7 +501,7 @@ public class TextLayoutEngine extends FontResourceManager
                     new FontCollection(defaultFonts.toArray(new FontFamily[0])));
         }
 
-        if (mVanillaFontManager != null) {
+        if (mVanillaFontManager != null && !mUseResourcePackTextLayout) {
             var access = ((AccessFontManager) mVanillaFontManager);
             access.getAnyGlyphs().invalidate();
             access.getNonFishyGlyphs().invalidate();
@@ -647,7 +651,7 @@ public class TextLayoutEngine extends FontResourceManager
         boolean mUseResourcePackTextLayout;
     }
 
-    private static boolean usesResourcePackTextLayout(ResourceManager resources) {
+    public static boolean usesResourcePackTextLayout(ResourceManager resources) {
         // Wynncraft's shared vertex include applies anchors/movements to ordinary ASCII
         // as well as custom glyphs. Replacing ASCII with a TrueType font bypasses them.
         // Check the active shader too, so an unused include cannot change font behavior.
@@ -699,7 +703,7 @@ public class TextLayoutEngine extends FontResourceManager
         closeFonts();
         mUseResourcePackTextLayout = results.mUseResourcePackTextLayout;
         if (mUseResourcePackTextLayout) {
-            LOGGER.info(MARKER, "Preserving resource-pack bitmap fonts and spacing for shader-positioned GUI text");
+            LOGGER.info(MARKER, "Preserving vanilla font atlases and GUI rendering for shader-positioned resource-pack text");
         }
         // reload fonts
         mFontCollections.clear();
@@ -707,7 +711,7 @@ public class TextLayoutEngine extends FontResourceManager
         mFontCollections.putAll(results.mFontCollections);
         mRawDefaultFontCollection = mFontCollections.get(Minecraft.DEFAULT_FONT);
         // vanilla compatibility
-        if (mVanillaFontManager != null) {
+        if (mVanillaFontManager != null && !mUseResourcePackTextLayout) {
             var access = ((AccessFontManager) mVanillaFontManager);
             access.getAnyGlyphs().invalidate();
             access.getNonFishyGlyphs().invalidate();
@@ -725,7 +729,7 @@ public class TextLayoutEngine extends FontResourceManager
             var atlasManager = Minecraft.getInstance().getAtlasManager();
             atlasManager.forEach((atlasId, atlasTexture) ->
                     atlasProviders.put(atlasId, new AtlasGlyphProvider(atlasTexture)));
-        } else {
+        } else if (mVanillaFontManager == null) {
             LOGGER.warn(MARKER, "Where is font manager?");
         }
         if (mRawDefaultFontCollection == null) {

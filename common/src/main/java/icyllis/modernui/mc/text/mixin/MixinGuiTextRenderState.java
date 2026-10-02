@@ -46,6 +46,11 @@ public class MixinGuiTextRenderState {
     private Font.PreparedText onPrepareText(Font font, FormattedCharSequence text,
                                             float x, float y, int color, boolean dropShadow,
                                             boolean includeEmpty, int backgroundColor) {
+        if (TextLayoutEngine.getInstance().usesResourcePackTextLayout()) {
+            // The pack reads marker pixels at fixed positions in vanilla's font atlas.
+            // ModernUI's glyph atlas and prepared runs cannot preserve that contract.
+            return font.prepareText(text, x, y, color, dropShadow, includeEmpty, backgroundColor);
+        }
         TextLayout layout = TextLayoutEngine.getInstance().lookupFormattedLayout(text);
         Matrix3x2fc ctm = pose;
         int mode;

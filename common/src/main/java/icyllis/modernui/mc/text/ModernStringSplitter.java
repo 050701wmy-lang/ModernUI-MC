@@ -82,6 +82,7 @@ public final class ModernStringSplitter extends StringSplitter {
      * @return text advance in GUI scaled pixels
      */
     public float measureText(@Nullable String text) {
+        if (mEngine.usesResourcePackTextLayout()) return super.stringWidth(text);
         if (text == null) {
             return 0;
         }
@@ -96,6 +97,7 @@ public final class ModernStringSplitter extends StringSplitter {
      * @return text advance in GUI scaled pixels
      */
     public float measureText(@Nonnull FormattedText text) {
+        if (mEngine.usesResourcePackTextLayout()) return super.stringWidth(text);
         return mEngine.lookupFormattedLayout(text).getTotalAdvance();
     }
 
@@ -106,6 +108,7 @@ public final class ModernStringSplitter extends StringSplitter {
      * @return text advance in GUI scaled pixels
      */
     public float measureText(@Nonnull FormattedCharSequence text) {
+        if (mEngine.usesResourcePackTextLayout()) return super.stringWidth(text);
         return mEngine.lookupFormattedLayout(text).getTotalAdvance();
     }
 
@@ -113,6 +116,7 @@ public final class ModernStringSplitter extends StringSplitter {
      * Modern Text Engine
      */
     public int plainIndexAtWidth(@Nonnull String text, int width, @Nonnull Style style) {
+        if (mEngine.usesResourcePackTextLayout()) return super.plainIndexAtWidth(text, width, style);
         return indexByWidth(text, (float) width, style);
     }
 
@@ -121,6 +125,7 @@ public final class ModernStringSplitter extends StringSplitter {
      */
     @Nonnull
     public String plainHeadByWidth(@Nonnull String text, int width, @Nonnull Style style) {
+        if (mEngine.usesResourcePackTextLayout()) return super.plainHeadByWidth(text, width, style);
         return headByWidth(text, (float) width, style);
     }
 
@@ -129,6 +134,7 @@ public final class ModernStringSplitter extends StringSplitter {
      */
     @Nonnull
     public String plainTailByWidth(@Nonnull String text, int width, @Nonnull Style style) {
+        if (mEngine.usesResourcePackTextLayout()) return super.plainTailByWidth(text, width, style);
         return tailByWidth(text, (float) width, style);
     }
 
@@ -168,6 +174,7 @@ public final class ModernStringSplitter extends StringSplitter {
      */
     @Nonnull
     public FormattedText headByWidth(@Nonnull FormattedText text, int width, @Nonnull Style style) {
+        if (mEngine.usesResourcePackTextLayout()) return super.headByWidth(text, width, style);
         // Handle Enchantment Table
         /*if (text instanceof Component component &&
                 component.getSiblings().isEmpty() &&
@@ -467,6 +474,10 @@ public final class ModernStringSplitter extends StringSplitter {
      */
     public void splitLines(@Nonnull String text, int width, @Nonnull Style style, @Deprecated boolean withEndSpace,
                            @Nonnull StringSplitter.LinePosConsumer linePos) {
+        if (mEngine.usesResourcePackTextLayout()) {
+            super.splitLines(text, width, style, withEndSpace, linePos);
+            return;
+        }
         computeLineBreaks(text, (float) width, style, linePos);
     }
 
@@ -475,6 +486,10 @@ public final class ModernStringSplitter extends StringSplitter {
      */
     public void splitLines(@Nonnull FormattedText text, int width, @Nonnull Style style,
                            @Nonnull BiConsumer<FormattedText, Boolean> consumer) {
+        if (mEngine.usesResourcePackTextLayout()) {
+            super.splitLines(text, width, style, consumer);
+            return;
+        }
         computeLineBreaks(text, (float) width, style, consumer);
     }
 
