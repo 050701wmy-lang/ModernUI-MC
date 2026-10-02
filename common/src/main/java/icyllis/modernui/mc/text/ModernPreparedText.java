@@ -337,7 +337,7 @@ public class ModernPreparedText implements Font.PreparedText {
             var run = runs.get(i);
             renderState.addGlyphToCurrentLayer(
                     new TextRunRenderState(pose, run.pipeline,
-                            TextureSetup.singleTextureWithLightmap(run.textureView, run.sampler),
+                            TextureSetup.singleTexture(run.textureView, run.sampler),
                             scissor,
                             x, top, color, dropShadow,
                             glyphs, positions, flags,

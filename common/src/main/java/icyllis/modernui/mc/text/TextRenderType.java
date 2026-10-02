@@ -61,7 +61,7 @@ public abstract class TextRenderType {
     public static final int MODE_UNIFORM_SCALE = 4; // <- must be power of 2
 
     public static final RenderPipeline.Snippet PIPELINE_SNIPPET = RenderPipeline.builder()
-            .withVertexShader(Identifier.withDefaultNamespace("core/text"))
+            .withVertexShader(ModernUIMod.location("core/rendertype_modern_text"))
             .withFragmentShader(ModernUIMod.location("core/rendertype_modern_text_normal"))
             .withBindGroupLayout(BindGroupLayouts.GLOBALS)
             .withBindGroupLayout(BindGroupLayouts.FOG)
@@ -69,7 +69,7 @@ public abstract class TextRenderType {
             .withBindGroupLayout(BindGroupLayouts.PROJECTION)
             .withBindGroupLayout(BindGroupLayouts.SAMPLER0_SAMPLER2)
             .withColorTargetState(new ColorTargetState(BlendFunction.TRANSLUCENT))
-            .withVertexBinding(0, DefaultVertexFormat.POSITION_COLOR_TEX_LIGHTMAP)
+            .withVertexBinding(0, DefaultVertexFormat.POSITION_TEX_LIGHTMAP_COLOR)
             .withPrimitiveTopology(PrimitiveTopology.QUADS)
             .buildSnippet();
 
@@ -81,18 +81,20 @@ public abstract class TextRenderType {
     public static final RenderPipeline PIPELINE_GUI_NORMAL = RenderPipeline.builder(PIPELINE_SNIPPET)
             .withLocation(ModernUIMod.location("pipeline/modern_text_gui_normal"))
             .withShaderDefine("IS_GUI")
+            // Match 26.2's GUI_TEXT input order; GUI shaders do not read UV2.
+            .withVertexBinding(0, DefaultVertexFormat.POSITION_TEX_COLOR)
             .withDepthStencilState(Optional.empty())
             .build();
 
     public static final RenderPipeline.Snippet PIPELINE_SDF_SNIPPET = RenderPipeline.builder()
-            .withVertexShader(Identifier.withDefaultNamespace("core/text"))
+            .withVertexShader(ModernUIMod.location("core/rendertype_modern_text"))
             .withBindGroupLayout(BindGroupLayouts.GLOBALS)
             .withBindGroupLayout(BindGroupLayouts.FOG)
             .withBindGroupLayout(BindGroupLayouts.DYNAMIC_TRANSFORMS)
             .withBindGroupLayout(BindGroupLayouts.PROJECTION)
             .withBindGroupLayout(BindGroupLayouts.SAMPLER0_SAMPLER2)
             .withColorTargetState(new ColorTargetState(BlendFunction.TRANSLUCENT))
-            .withVertexBinding(0, DefaultVertexFormat.POSITION_COLOR_TEX_LIGHTMAP)
+            .withVertexBinding(0, DefaultVertexFormat.POSITION_TEX_LIGHTMAP_COLOR)
             .withPrimitiveTopology(PrimitiveTopology.QUADS)
             .buildSnippet();
 
@@ -112,6 +114,7 @@ public abstract class TextRenderType {
             .withLocation(ModernUIMod.location("pipeline/modern_text_gui_sdf"))
             .withFragmentShader(ModernUIMod.location("core/rendertype_modern_text_sdf_fill"))
             .withShaderDefine("IS_GUI")
+            .withVertexBinding(0, DefaultVertexFormat.POSITION_TEX_COLOR)
             .withDepthStencilState(Optional.empty())
             .build();
 

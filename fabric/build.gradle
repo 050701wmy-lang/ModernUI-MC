@@ -139,6 +139,15 @@ test {
     failOnNoDiscoveredTests = false
 }
 
+tasks.register('verifyTextShaders', JavaExec) {
+    dependsOn testClasses
+    classpath = sourceSets.test.runtimeClasspath
+    mainClass = 'com.mojang.blaze3d.vulkan.glsl.ModernTextShaderCheck'
+    jvmArgs '--enable-native-access=ALL-UNNAMED'
+}
+
+check.dependsOn tasks.named('verifyTextShaders')
+
 loom.nestJars(
         tasks.named("shadowJar", Jar),
         objects.fileCollection().from(

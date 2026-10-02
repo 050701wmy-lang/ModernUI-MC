@@ -43,7 +43,23 @@ device and ModernUI renderer on an RTX 4060 Laptop GPU, with ImmediatelyFast
 and Vitrail present. It subsequently failed compiling the GUI text pipeline
 because a shader declared `Globals` without a corresponding pipeline layout.
 The normal/SDF text snippets and tooltip pipeline now declare `Globals`, as
-Minecraft's own pipelines do. In-game verification of this fix is pending.
+Minecraft's own pipelines do. The subsequent user run reached the world.
+
+That run exposed corrupted GUI text with the Wynncraft resource pack. Its
+replacement vanilla text vertex shader adds outputs that ModernUI's fragment
+shaders do not consume. Blaze3D's Vulkan rebinder compacts fragment input
+locations, while retaining the vertex output locations, causing a mismatch.
+ModernUI normal/SDF text now uses its own paired vertex shader. Resource-pack
+bitmap text continues to use the vanilla pipeline. GUI text uses the 26.2
+POSITION_TEX_COLOR format and no lightmap; world text uses
+POSITION_TEX_LIGHTMAP_COLOR.
+
+The CPU-only `:ModernUI-Fabric:verifyTextShaders` check compiles the real GLSL
+with Mojang's Vulkan compiler and checks reflected SPIR-V interfaces for all
+six GUI/world normal/SDF variants. It also detects an injected extra vertex
+output reproducing the resource-pack mismatch. This check and the full build
+passed. Visual verification of the font fix is pending; no game was launched
+by the agent.
 
 Check the main menu, ModernUI settings screen, transparent edges, tooltips,
 Chinese text, emoji, world text, resizing and resource reloads. Confirm the log
