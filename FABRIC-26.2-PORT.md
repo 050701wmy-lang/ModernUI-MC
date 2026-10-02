@@ -61,6 +61,18 @@ output reproducing the resource-pack mismatch. This check and the full build
 passed. Visual verification of the font fix is pending; no game was launched
 by the agent.
 
+Wynncraft also uses its text shader to anchor ordinary ASCII labels to custom
+GUI cards. The default font exclusion rules redirected those glyphs to the
+ModernUI shader, leaving labels at their original title positions. Font reload
+now detects the active `core/text.vsh` importing the server's shared text vertex
+include with anchor and movement calls. While that pack is active, default-font
+bitmap and spacing providers take precedence, preserving glyph advances and
+the vanilla resource-pack shader path. Characters absent from the pack retain
+the ModernUI typeface fallback. Removing the pack restores the configured font
+policy on reload; the saved configuration is not modified. The detection was
+checked against the installed 26.2 server-pack shaders. Build and SPIR-V checks
+passed; in-game card label placement remains for the user to verify.
+
 Check the main menu, ModernUI settings screen, transparent edges, tooltips,
 Chinese text, emoji, world text, resizing and resource reloads. Confirm the log
 reports the Vulkan backend; Minecraft can fall back to OpenGL if Vulkan fails.

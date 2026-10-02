@@ -53,6 +53,8 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.awt.font.GlyphVector;
 import java.io.PrintWriter;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.lang.ref.WeakReference;
 import java.util.*;
 import java.util.concurrent.*;
@@ -302,6 +304,9 @@ public class TextLayoutEngine extends FontResourceManager
     // vanilla's font manager, used only for compatibility
     private FontManager mVanillaFontManager;
 
+    // Some server packs encode GUI anchors in the vanilla text shader and bitmap pixels.
+    private boolean mUseResourcePackTextLayout;
+
     private final ModernTextRenderer mTextRenderer;
     private final ModernStringSplitter mStringSplitter;
 
@@ -477,14 +482,16 @@ public class TextLayoutEngine extends FontResourceManager
         mFontCollections.putIfAbsent(MONOSPACED,
                 Typeface.MONOSPACED);
 
-        if (sDefaultFontBehavior == DEFAULT_FONT_BEHAVIOR_IGNORE_ALL || // exclude everything
-                (sDefaultFontBehavior == DEFAULT_FONT_BEHAVIOR_ONLY_INCLUDE && // include nothing
+        int defaultFontBehavior = mUseResourcePackTextLayout
+                ? DEFAULT_FONT_BEHAVIOR_KEEP_ALL : sDefaultFontBehavior;
+        if (defaultFontBehavior == DEFAULT_FONT_BEHAVIOR_IGNORE_ALL || // exclude everything
+                (defaultFontBehavior == DEFAULT_FONT_BEHAVIOR_ONLY_INCLUDE && // include nothing
                         (sDefaultFontRuleSet == null || sDefaultFontRuleSet.isEmpty()))) {
             // use Modern UI typeface list
             mFontCollections.put(Minecraft.DEFAULT_FONT, ModernUI.getSelectedTypeface());
         } else {
             LinkedHashSet<FontFamily> defaultFonts = new LinkedHashSet<>();
-            populateDefaultFonts(defaultFonts, sDefaultFontBehavior);
+            populateDefaultFonts(defaultFonts, defaultFontBehavior);
             defaultFonts.addAll(ModernUI.getSelectedTypeface().getFamilies());
             mFontCollections.put(Minecraft.DEFAULT_FONT,
                     new FontCollection(defaultFonts.toArray(new FontFamily[0])));
@@ -637,6 +644,26 @@ public class TextLayoutEngine extends FontResourceManager
 
     private static final class LoadResults extends FontResourceManager.LoadResults {
         volatile Map<Identifier, FontCollection> mFontCollections;
+        boolean mUseResourcePackTextLayout;
+    }
+
+    private static boolean usesResourcePackTextLayout(ResourceManager resources) {
+        // Wynncraft's shared vertex include applies anchors/movements to ordinary ASCII
+        // as well as custom glyphs. Replacing ASCII with a TrueType font bypasses them.
+        // Check the active shader too, so an unused include cannot change font behavior.
+        var vertex = resources.getResource(Identifier.withDefaultNamespace("shaders/core/text.vsh"));
+        var include = resources.getResource(Identifier.withDefaultNamespace("shaders/include/render/vertex/text.glsl"));
+        if (vertex.isEmpty() || include.isEmpty()) return false;
+        try (var vertexStream = vertex.get().open(); var includeStream = include.get().open()) {
+            String vertexSource = new String(vertexStream.readAllBytes(), StandardCharsets.UTF_8);
+            String includeSource = new String(includeStream.readAllBytes(), StandardCharsets.UTF_8);
+            return vertexSource.contains("<render/vertex/text.glsl>")
+                    && includeSource.contains("applyAnchors();")
+                    && includeSource.contains("applyMovements();");
+        } catch (IOException e) {
+            LOGGER.warn(MARKER, "Cannot inspect resource-pack text positioning", e);
+            return false;
+        }
     }
 
     // ASYNC
@@ -651,6 +678,7 @@ public class TextLayoutEngine extends FontResourceManager
                         ModernUIClient.getInstance().loadTypeface();
                     }
                     loadFonts(resourceManager, results);
+                    results.mUseResourcePackTextLayout = usesResourcePackTextLayout(resourceManager);
                 },
                 preparationExecutor);
         final var loadEmojis = CompletableFuture.runAsync(() ->
@@ -669,6 +697,10 @@ public class TextLayoutEngine extends FontResourceManager
     // SYNC
     private void applyResources(@Nonnull LoadResults results) {
         closeFonts();
+        mUseResourcePackTextLayout = results.mUseResourcePackTextLayout;
+        if (mUseResourcePackTextLayout) {
+            LOGGER.info(MARKER, "Preserving resource-pack bitmap fonts and spacing for shader-positioned GUI text");
+        }
         // reload fonts
         mFontCollections.clear();
         mFontCollections.putAll(mRegisteredFonts);
